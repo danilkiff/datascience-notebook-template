@@ -1,0 +1,19 @@
+services:
+  jupyter:
+    build: .
+    container_name: jupyter
+    restart: unless-stopped
+    command: jupyter lab --ip=0.0.0.0 --no-browser --IdentityProvider.token=''
+    ports:
+      - 8888:8888
+    volumes:
+      - ./workspace:/home/jupyternb
+    working_dir: /home/jupyternb
+    environment:
+      - NB_USER=jupyternb
+      - NB_UID=1000
+      - NB_GID=100
+      - CHOWN_HOME=yes
+    shm_size: 8g
+    devices:
+      - nvidia.com/gpu=all
