@@ -84,8 +84,27 @@ sudo chown -R $USER:$USER workspace/
 
 2. **GPU not available**:
 
-- Verify NVIDIA Container Toolkit installation
-- Check driver compatibility
+Make sure the NVIDIA driver is installed and `nvidia-smi` works on the host.
+
+Verify that [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/) is installed and integrated with Docker:
+
+```bash
+sudo nvidia-ctk runtime configure --runtime=docker --set-as-default
+sudo systemctl restart docker
+```
+
+Docker 25+ supports CDI but device specs must be generated first:
+
+```bash
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+sudo systemctl restart docker
+```
+
+After that, this will work the same as `--gpus all`:
+
+```bash
+docker run --rm --device=nvidia.com/gpu=all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi
+```
 
 3. **Port conflict**:
 
