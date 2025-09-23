@@ -85,10 +85,10 @@ with mlflow.start_run(run_name="demo"):
 ## Quick Start
 
 1. Clone this repository
-2. Start the container:
+2. Copy `.env.example` to `.env` and adjust for your needs. Then start the container:
 
 ```bash
-docker-compose up -d
+docker-compose up --build --detach
 ```
 
 3. Access:

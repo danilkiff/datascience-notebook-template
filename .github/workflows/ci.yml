@@ -13,9 +13,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Validate docker-compose.yaml
-        run: docker compose config
+        run: cp .env.example .env && docker compose config
 
   hadolint:
     runs-on: ubuntu-22.04
@@ -29,8 +31,37 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Hadolint ${{ matrix.dockerfile }}
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: ${{ matrix.dockerfile }}
+
+  gitleaks:
+    runs-on: ubuntu-22.04
+    steps:
+    
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Gitleaks check
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+  actionlint:
+    runs-on: ubuntu-24.04
+    steps:
+      
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Actionlint check
+        uses: raven-actions/actionlint@v1
