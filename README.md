@@ -1,10 +1,76 @@
 # JupyterLab Data Science Environment
 
-A GPU-ready container for data science and deep learning experiments with JupyterLab, Fast.ai, and popular scientific Python libraries.
+A GPU-ready environment for data science and deep learning experiments with JupyterLab, Fast.ai, and MLflow tracking server (with MinIO + PostgreSQL).
+
+# Architecture Overview
+
+This stack provides a reproducible local ML environment:
+
+* **Jupyter** for interactive dev & training (GPU-ready).
+* **MLflow** as tracking/UI.
+* **PostgreSQL** as MLflow backend store (experiments, params, metrics).
+* **MinIO (S3)** as artifact store (models, plots, notebooks).
+* **init\_s3** as one-time bucket initializer.
+
+## Topology
+
+```mermaid
+sequenceDiagram
+  participant S3 as s3 [mlflow_s3]
+  participant Init as init_s3 [mlflow_init_s3]
+  participant PG as postgres [mlflow_postgres]
+  participant MF as mlflow [mlflow_server]
+  participant NB as jupyter [jupyter]
+
+  Note over S3,NB: docker compose up --detach --build
+
+  S3->>S3: healthcheck (ready on :9000)
+  PG->>PG: pg_isready
+  S3-->>Init: service_healthy
+  Init->>S3: mc mb -p <bucket> + enable versioning
+  Init-->>MF: service_completed_successfully
+  PG-->>MF: service_healthy
+  MF->>PG: connect (backend URI)
+  MF->>S3: ping (artifact root)
+  MF-->>NB: service_healthy
+  NB->>MF: log params/metrics/artifacts
+  NB->>S3: direct S3 operations if needed
+```
+
+## Data Flow
+
+1. Notebook runs in **Jupyter**.
+2. Code calls MLflow client (`mlflow.log_*` / `autolog()`).
+3. **MLflow** writes metadata to **Postgres**.
+4. **MLflow** uploads artifacts to **MinIO** under `s3://$MINIO_BUCKET/...`.
+5. You inspect runs in MLflow UI; raw artifacts visible via MinIO Console.
+
+## Volumes
+
+* `postgres_data` → Postgres cluster data
+* `minio_data` → MinIO object store
+* `./workspace` ↔ `/home/<NB_USER>` (your notebooks/code)
+
+> Back up by snapshotting volumes + the workspace directory.
+
+## Minimal Code Contracts
+
+Notebook snippet (already preconfigured via env):
+
+```python
+import mlflow, os
+mlflow.set_experiment("notebooks")
+with mlflow.start_run(run_name="demo"):
+    mlflow.log_param("lr", 3e-4)
+    mlflow.log_metric("loss", 0.12)
+    mlflow.log_artifact("some_output.txt")
+```
+
 
 ## Features
 
 - JupyterLab with pre-installed data science libraries (pandas, numpy, matplotlib, scikit-learn)
+- MLflow tracking server with MinIO (S3) and PostgreSQL backend
 - Fast.ai deep learning framework
 - NVIDIA GPU support (CUDA)
 - Pre-configured workspace directory
@@ -25,7 +91,11 @@ A GPU-ready container for data science and deep learning experiments with Jupyte
 docker-compose up -d
 ```
 
-3. Access JupyterLab at: `http://localhost:8888`
+3. Access:
+
+- JupyterLab → http://localhost:8888
+- MLflow UI → http://localhost:5050
+- MinIO console → http://localhost:9001 (credentials from .env)
 
 ## GPU Usage
 
@@ -46,9 +116,11 @@ print(torch.cuda.is_available())
 
 ```
 .
-├── docker-compose.yaml   # Container orchestration
-├── Dockerfile            # Container definition
-└── workspace/            # Working directory
+├── docker-compose.yaml    # Orchestration of all services
+├── .env                   # Environment variables (edit here)
+├── Dockerfile.jupyter     # JupyterLab + fastai + mlflow client
+├── Dockerfile.mlflow      # MLflow tracking server
+└── workspace/             # User working directory (mounted in Jupyter)
 ```
 
 ## Security Notes
