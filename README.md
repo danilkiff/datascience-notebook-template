@@ -48,19 +48,21 @@ sequenceDiagram
 * `minio_data` → MinIO object store
 * `./workspace` ↔ `/home/<NB_USER>` (your notebooks/code)
 
-> Back up by snapshotting volumes + the workspace directory.
+Back up by snapshotting volumes + the workspace directory.
 
 ## Minimal Code Contracts
 
 Notebook snippet (already preconfigured via env):
 
 ```python
-import mlflow, os
+import mlflow
+
 mlflow.set_experiment("notebooks")
+
 with mlflow.start_run(run_name="demo"):
-    mlflow.log_param("lr", 3e-4)
-    mlflow.log_metric("loss", 0.12)
-    mlflow.log_artifact("some_output.txt")
+  mlflow.log_param("lr", 3e-4)
+  mlflow.log_metric("loss", 0.12)
+  mlflow.log_artifact("some_output.txt")
 ```
 
 ## Features
@@ -83,7 +85,7 @@ with mlflow.start_run(run_name="demo"):
 
 * Clone this repository
 * Copy `.env.example` to `.env` and adjust for your needs.
-   Then start the container:
+  Then start the container:
 
 ```bash
 docker-compose up --build --detach
