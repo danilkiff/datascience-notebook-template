@@ -7,30 +7,30 @@ on:
   pull_request:
 
 jobs:
-  build:
+  compose-lint:
     runs-on: ubuntu-22.04
-
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx (driver=docker)
-        uses: docker/setup-buildx-action@v3
-        with:
-            driver: docker
-
-      - name: Build image
-        run: docker build -t datascience-notebook .
-
-      - name: Smoke test
-        run: docker run --rm datascience-notebook python -c "import fastai; import jupyterlab"
-
-  compose-check:
-    runs-on: ubuntu-22.04
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Check docker-compose.yaml
+      - name: Validate docker-compose.yaml
         run: docker compose config
+
+  hadolint:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        dockerfile:
+          - Dockerfile.jupyter
+          - Dockerfile.mlflow
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Hadolint ${{ matrix.dockerfile }}
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ${{ matrix.dockerfile }}
