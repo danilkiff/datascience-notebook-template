@@ -1,10 +1,7 @@
 # JupyterLab Data Science Environment
 
-A GPU-ready environment for data science and deep learning experiments with JupyterLab, Fast.ai, and MLflow tracking server (with MinIO + PostgreSQL).
-
-# Architecture Overview
-
-This stack provides a reproducible local ML environment:
+A GPU-ready environment for data science and deep learning experiments with
+JupyterLab, Fast.ai, and MLflow tracking server (with MinIO + PostgreSQL).
 
 * **Jupyter** for interactive dev & training (GPU-ready).
 * **MLflow** as tracking/UI.
@@ -66,36 +63,37 @@ with mlflow.start_run(run_name="demo"):
     mlflow.log_artifact("some_output.txt")
 ```
 
-
 ## Features
 
-- JupyterLab with pre-installed data science libraries (pandas, numpy, matplotlib, scikit-learn)
-- MLflow tracking server with MinIO (S3) and PostgreSQL backend
-- Fast.ai deep learning framework
-- NVIDIA GPU support (CUDA)
-- Pre-configured workspace directory
-- 8GB shared memory allocation
+* JupyterLab with pre-installed data science libraries (pandas, numpy,
+  matplotlib, scikit-learn)
+* MLflow tracking server with MinIO (S3) and PostgreSQL backend
+* Fast.ai deep learning framework
+* NVIDIA GPU support (CUDA)
+* Pre-configured workspace directory
+* 8GB shared memory allocation
 
 ## Prerequisites
 
-- Docker and Docker Compose
-- NVIDIA GPU with drivers (optional)
-- NVIDIA Container Toolkit (for GPU support)
+* Docker and Docker Compose
+* NVIDIA GPU with drivers (optional)
+* NVIDIA Container Toolkit (for GPU support)
 
 ## Quick Start
 
-1. Clone this repository
-2. Copy `.env.example` to `.env` and adjust for your needs. Then start the container:
+* Clone this repository
+* Copy `.env.example` to `.env` and adjust for your needs.
+   Then start the container:
 
 ```bash
 docker-compose up --build --detach
 ```
 
-3. Access:
+## Access
 
-- JupyterLab → http://localhost:8888
-- MLflow UI → http://localhost:5050
-- MinIO console → http://localhost:9001 (credentials from .env)
+* JupyterLab    - http://localhost:8888
+* MLflow UI     - http://localhost:5050
+* MinIO console - http://localhost:9001 (credentials from `.env`)
 
 ## GPU Usage
 
@@ -114,7 +112,7 @@ print(torch.cuda.is_available())
 
 ## Project Structure
 
-```
+```text
 .
 ├── docker-compose.yaml    # Orchestration of all services
 ├── .env                   # Environment variables (edit here)
@@ -125,12 +123,13 @@ print(torch.cuda.is_available())
 
 ## Security Notes
 
-Default configuration disables authentication (for development only). For production use:
+Default configuration disables authentication (for development only).
+For production use:
 
-- Set `JUPYTER_TOKEN` environment variable
-- Use HTTPS encryption
-- Enable authentication
-- Restrict network access
+* Set `JUPYTER_TOKEN` environment variable
+* Use HTTPS encryption
+* Enable authentication
+* Restrict network access
 
 ## Customization
 
@@ -148,17 +147,18 @@ docker-compose build --no-cache
 
 ## Troubleshooting
 
-1. **Permission issues**:
+### Permission issues
 
 ```bash
 sudo chown -R $USER:$USER workspace/
 ```
 
-2. **GPU not available**:
+### GPU not available
 
 Make sure the NVIDIA driver is installed and `nvidia-smi` works on the host.
 
-Verify that [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/) is installed and integrated with Docker:
+Verify that [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/)
+is installed and integrated with Docker:
 
 ```bash
 sudo nvidia-ctk runtime configure --runtime=docker --set-as-default
@@ -178,7 +178,7 @@ After that, this will work the same as `--gpus all`:
 docker run --rm --device=nvidia.com/gpu=all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi
 ```
 
-3. **Port conflict**:
+### Port conflict
 
 Change port mapping in docker-compose.yaml:
 
@@ -189,4 +189,5 @@ ports:
 
 ## License
 
-This project is provided for educational and research purposes under the Unlicense terms.
+This project is provided for educational and research purposes
+under the Unlicense terms.

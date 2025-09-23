@@ -55,7 +55,7 @@ jobs:
 
 
   actionlint:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       
       - name: Checkout
@@ -65,3 +65,18 @@ jobs:
           
       - name: Actionlint check
         uses: raven-actions/actionlint@v1
+
+  markdownlint:
+    runs-on: ubuntu-22.04
+    steps:
+      
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Markdown lint (install)
+        run: npm i -g markdownlint-cli@0.42.0
+      
+      - name: Markdown lint (execute)
+        run: markdownlint "**/*.md"
