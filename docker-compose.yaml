@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile.jupyter
     container_name: jupyter
     restart: unless-stopped
-    command: jupyter lab --ip=0.0.0.0 --no-browser --IdentityProvider.token=''
+    command: jupyter lab --ip=0.0.0.0 --no-browser --IdentityProvider.token='' --ServerApp.log_level=WARN
     ports:
       - 8888:8888
     volumes:
