@@ -2,4 +2,5 @@ FROM quay.io/jupyter/scipy-notebook:2025-07-14
 USER ${NB_UID}
 RUN pip install --no-cache-dir \
   fastai==2.8.4 \
-  mlflow==3.4.0
+  mlflow==3.4.0 \
+  boto3==1.40.36
