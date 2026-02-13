@@ -1,0 +1,12 @@
+.git
+.github
+.idea
+workspace
+*.md
+LICENSE
+.env
+.env.example
+.hadolint.yaml
+.markdownlint.yaml
+.pre-commit-config.yaml
+.dockerignore
