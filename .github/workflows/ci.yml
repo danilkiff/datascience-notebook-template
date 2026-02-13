@@ -9,7 +9,7 @@ on:
 
 jobs:
   changes:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       pull-requests: read
     outputs:
@@ -20,7 +20,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Detect changed paths
         uses: dorny/paths-filter@v3
@@ -44,11 +44,11 @@ jobs:
   compose-lint:
     needs: changes
     if: needs.changes.outputs.compose == 'true'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Validate docker-compose.yaml
         run: cp .env.example .env && docker compose config
@@ -56,7 +56,7 @@ jobs:
   hadolint:
     needs: changes
     if: needs.changes.outputs.docker == 'true'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -66,7 +66,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Hadolint ${{ matrix.dockerfile }}
         uses: hadolint/hadolint-action@v3.1.0
@@ -74,11 +74,11 @@ jobs:
           dockerfile: ${{ matrix.dockerfile }}
 
   gitleaks:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -90,11 +90,11 @@ jobs:
   actionlint:
     needs: changes
     if: needs.changes.outputs.workflows == 'true'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install actionlint
         run: bash <(curl -s https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
@@ -105,14 +105,14 @@ jobs:
   markdownlint:
     needs: changes
     if: needs.changes.outputs.markdown == 'true'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Markdown lint (install)
-        run: npm i -g markdownlint-cli@0.42.0
+        run: npm i -g markdownlint-cli@0.47.0
 
       - name: Markdown lint (execute)
         run: markdownlint "**/*.md"
@@ -120,11 +120,11 @@ jobs:
   smoke-test:
     needs: changes
     if: needs.changes.outputs.compose == 'true'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Prepare env
         run: cp .env.example .env

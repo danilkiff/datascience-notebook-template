@@ -79,7 +79,7 @@ services:
       - backend
 
   postgres:
-    image: postgres:17.6
+    image: postgres:17.8
     container_name: mlflow_postgres
     restart: unless-stopped
     environment:

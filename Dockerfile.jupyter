@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Unlicense
-FROM quay.io/jupyter/scipy-notebook:2025-07-14
+FROM quay.io/jupyter/scipy-notebook:2026-02-09
 USER ${NB_UID}
 COPY requirements/jupyter.in /tmp/requirements.in
 RUN pip install --no-cache-dir -r /tmp/requirements.in
