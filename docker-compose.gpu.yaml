@@ -1,0 +1,5 @@
+services:
+  jupyter:
+    shm_size: 8g
+    devices:
+      - nvidia.com/gpu=all

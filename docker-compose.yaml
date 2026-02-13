@@ -5,25 +5,27 @@ services:
       dockerfile: Dockerfile.jupyter
     container_name: jupyter
     restart: unless-stopped
-    command: jupyter lab --ip=0.0.0.0 --no-browser --IdentityProvider.token='' --ServerApp.log_level=WARN
+    command: >
+      jupyter lab
+        --ip=0.0.0.0
+        --no-browser
+        --IdentityProvider.token='${JUPYTER_TOKEN}'
+        --ServerApp.log_level=WARN
     ports:
       - 8888:8888
     volumes:
-      - ./workspace:/home/jupyternb
-    working_dir: /home/jupyternb
-    env_file: .env
+      - ./workspace:/home/${NB_USER}
+    working_dir: /home/${NB_USER}
     environment:
-      - NB_USER=${NB_USER}
-      - NB_UID=${NB_UID}
-      - NB_GID=${NB_GID}
-      - CHOWN_HOME=yes
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - MLFLOW_S3_ENDPOINT_URL=http://s3:9000
-      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
-      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
-    shm_size: 8g
-    devices:
-      - nvidia.com/gpu=all
+      NB_USER: ${NB_USER}
+      NB_UID: ${NB_UID}
+      NB_GID: ${NB_GID}
+      CHOWN_HOME: "yes"
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_S3_ENDPOINT_URL: http://s3:9000
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+    shm_size: ${SHM_SIZE:-2g}
     healthcheck:
       test: curl -f http://localhost:8888/api
       interval: 5s
@@ -33,19 +35,20 @@ services:
     depends_on:
       mlflow:
         condition: service_healthy
+    networks:
+      - frontend
+      - backend
 
   s3:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: mlflow_s3
     restart: unless-stopped
-    env_file: .env
-    command: server /data --console-address ":${MINIO_CONSOLE_PORT}"
+    command: server /data --console-address ":9001"
     ports:
-      - "${MINIO_API_PORT}:9000"
       - "${MINIO_CONSOLE_PORT}:9001"
     environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
     healthcheck:
@@ -55,6 +58,8 @@ services:
       timeout: 5s
       retries: 10
       start_period: 5s
+    networks:
+      - backend
 
   init_s3:
     image: minio/mc:RELEASE.2025-08-13T08-35-41Z
@@ -62,7 +67,6 @@ services:
     depends_on:
       s3:
         condition: service_healthy
-    env_file: .env
     entrypoint: >
       /bin/sh -c "
       mc alias set minio http://s3:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
@@ -70,18 +74,17 @@ services:
       mc version enable minio/${MINIO_BUCKET} || true
       "
     restart: "no"
+    networks:
+      - backend
 
   postgres:
     image: postgres:17.6
     container_name: mlflow_postgres
     restart: unless-stopped
-    env_file: .env
-    ports:
-      - "${POSTGRES_PORT}:5432"
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -90,6 +93,8 @@ services:
       timeout: 5s
       retries: 10
       start_period: 5s
+    networks:
+      - backend
 
   mlflow:
     build:
@@ -97,13 +102,11 @@ services:
       dockerfile: Dockerfile.mlflow
     container_name: mlflow_server
     restart: unless-stopped
-    env_file: .env
     environment:
-      - MLFLOW_S3_ENDPOINT_URL=http://s3:9000
-      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
-      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
-      # don't spam on health checks
-      - UVICORN_ACCESS_LOG=0
+      MLFLOW_S3_ENDPOINT_URL: http://s3:9000
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      UVICORN_ACCESS_LOG: "0"
     depends_on:
       postgres:
         condition: service_healthy
@@ -125,6 +128,13 @@ services:
       timeout: 5s
       retries: 10
       start_period: 5s
+    networks:
+      - frontend
+      - backend
+
+networks:
+  frontend: {}
+  backend: {}
 
 volumes:
   postgres_data: {}
