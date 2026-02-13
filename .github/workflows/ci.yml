@@ -80,3 +80,52 @@ jobs:
       
       - name: Markdown lint (execute)
         run: markdownlint "**/*.md"
+
+  smoke-test:
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare env
+        run: cp .env.example .env
+
+      - name: Build and start services
+        run: docker compose up --detach --build
+
+      - name: Wait for Jupyter
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8888/api > /dev/null 2>&1; then
+              echo "Jupyter is ready"
+              exit 0
+            fi
+            echo "Waiting for Jupyter... ($i/30)"
+            sleep 5
+          done
+          echo "Jupyter failed to start"
+          docker compose logs
+          exit 1
+
+      - name: Wait for MLflow
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5050/ > /dev/null 2>&1; then
+              echo "MLflow is ready"
+              exit 0
+            fi
+            echo "Waiting for MLflow... ($i/30)"
+            sleep 5
+          done
+          echo "MLflow failed to start"
+          docker compose logs
+          exit 1
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down --volumes
