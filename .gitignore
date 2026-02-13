@@ -1,4 +1,7 @@
 .idea
-workspace
-
 .env
+
+# workspace: track directory structure, ignore user content
+workspace/**
+!workspace/**/
+!workspace/**/.gitkeep
