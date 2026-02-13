@@ -71,9 +71,13 @@ with mlflow.start_run(run_name="demo"):
   matplotlib, scikit-learn)
 * MLflow tracking server with MinIO (S3) and PostgreSQL backend
 * Fast.ai deep learning framework
-* NVIDIA GPU support (CUDA)
-* Pre-configured workspace directory
-* 8GB shared memory allocation
+* NVIDIA GPU support (CUDA) via separate compose override
+* Pre-configured workspace directory with canonical DS layout
+* 2GB shared memory allocation
+* Token-based Jupyter authentication
+* Network isolation (frontend/backend)
+* Pre-commit hooks (nbstripout, ruff)
+* Makefile for common operations
 
 ## Prerequisites
 
@@ -88,18 +92,39 @@ with mlflow.start_run(run_name="demo"):
   Then start the container:
 
 ```bash
-docker-compose up --build --detach
+make up
+```
+
+Or with GPU support:
+
+```bash
+make up-gpu
+```
+
+Or directly via Docker Compose:
+
+```bash
+docker compose up --build --detach
 ```
 
 ## Access
 
-* JupyterLab    - http://localhost:8888
+* JupyterLab    - http://localhost:8888 (token from `JUPYTER_TOKEN` in `.env`)
 * MLflow UI     - http://localhost:5050
 * MinIO console - http://localhost:9001 (credentials from `.env`)
 
 ## GPU Usage
 
-For GPU support, ensure:
+GPU support is provided via a separate compose override file.
+Start with GPU:
+
+```bash
+make up-gpu
+# or
+docker compose -f docker-compose.yaml -f docker-compose.gpu.yaml up --detach --build
+```
+
+Ensure:
 
 1. NVIDIA drivers are installed on the host
 2. NVIDIA Container Toolkit is configured
@@ -116,35 +141,55 @@ print(torch.cuda.is_available())
 
 ```text
 .
-├── docker-compose.yaml    # Orchestration of all services
-├── .env                   # Environment variables (edit here)
-├── Dockerfile.jupyter     # JupyterLab + fastai + mlflow client
-├── Dockerfile.mlflow      # MLflow tracking server
-└── workspace/             # User working directory (mounted in Jupyter)
+├── docker-compose.yaml        # Orchestration of all services
+├── docker-compose.gpu.yaml    # GPU override (nvidia devices)
+├── .env                       # Environment variables (edit here)
+├── Dockerfile.jupyter         # JupyterLab + fastai + mlflow client
+├── Dockerfile.mlflow          # MLflow tracking server
+├── Makefile                   # Common commands (make help)
+├── requirements/
+│   ├── jupyter.in             # Jupyter Python dependencies
+│   └── mlflow.in              # MLflow Python dependencies
+├── .pre-commit-config.yaml    # Pre-commit hooks (nbstripout, ruff)
+└── workspace/                 # User working directory (mounted in Jupyter)
+    ├── data/                  # Raw, processed, external data
+    ├── notebooks/             # Exploration and training notebooks
+    ├── src/                   # Reusable Python modules
+    ├── models/                # Serialized models
+    └── configs/               # Hyperparams, experiment configs
 ```
 
 ## Security Notes
 
-Default configuration disables authentication (for development only).
+Default configuration uses token-based authentication for Jupyter.
 For production use:
 
-* Set `JUPYTER_TOKEN` environment variable
+* Change `JUPYTER_TOKEN` from the default value
 * Use HTTPS encryption
-* Enable authentication
+* Enable MLflow authentication
 * Restrict network access
 
 ## Customization
 
-Add packages to Dockerfile:
+Add packages to `requirements/jupyter.in`:
 
-```Dockerfile
-RUN pip install --user --no-cache-dir your-package-name
+```text
+your-package-name==1.0.0
 ```
 
 Rebuild the container after changes:
 
 ```bash
-docker-compose build --no-cache
+make build
+```
+
+## Pre-commit Hooks
+
+Install pre-commit hooks to strip notebook outputs and lint Python code:
+
+```bash
+pip install pre-commit
+pre-commit install
 ```
 
 ## Troubleshooting
@@ -177,7 +222,9 @@ sudo systemctl restart docker
 After that, this will work the same as `--gpus all`:
 
 ```bash
-docker run --rm --device=nvidia.com/gpu=all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi
+docker run --rm \
+  --device=nvidia.com/gpu=all \
+  nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi
 ```
 
 ### Port conflict
@@ -188,6 +235,23 @@ Change port mapping in docker-compose.yaml:
 ports:
   - 8889:8888
 ```
+
+## Makefile Targets
+
+```bash
+make help
+```
+
+| Target   | Description                          |
+|----------|--------------------------------------|
+| `up`     | Start all services                   |
+| `up-gpu` | Start all services with GPU support  |
+| `down`   | Stop all services                    |
+| `build`  | Rebuild images without cache         |
+| `logs`   | Tail logs from all services          |
+| `ps`     | Show running services                |
+| `clean`  | Stop services and remove volumes     |
+| `help`   | Show available targets               |
 
 ## License
 
