@@ -1,4 +1,6 @@
-# Code of Conduct
+<!-- SPDX-License-Identifier: Unlicense -->
+
+# Code of conduct
 
 Stay technical. Stay clear. No drama.
 

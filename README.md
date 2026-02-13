@@ -1,4 +1,6 @@
-# JupyterLab Data Science Environment
+<!-- SPDX-License-Identifier: Unlicense -->
+
+# JupyterLab data science environment
 
 A GPU-ready environment for data science and deep learning experiments with
 JupyterLab, Fast.ai, and MLflow tracking server (with MinIO + PostgreSQL).
@@ -34,7 +36,7 @@ sequenceDiagram
   NB->>S3: direct S3 operations if needed
 ```
 
-## Data Flow
+## Data flow
 
 1. Notebook runs in **Jupyter**.
 2. Code calls MLflow client (`mlflow.log_*` / `autolog()`).
@@ -50,7 +52,7 @@ sequenceDiagram
 
 Back up by snapshotting volumes + the workspace directory.
 
-## Minimal Code Contracts
+## Minimal code contracts
 
 Notebook snippet (already preconfigured via env):
 
@@ -85,7 +87,7 @@ with mlflow.start_run(run_name="demo"):
 * NVIDIA GPU with drivers (optional)
 * NVIDIA Container Toolkit (for GPU support)
 
-## Quick Start
+## Quick start
 
 * Clone this repository
 * Copy `.env.example` to `.env` and adjust for your needs.
@@ -113,7 +115,7 @@ docker compose up --build --detach
 * MLflow UI     - http://localhost:5050
 * MinIO console - http://localhost:9001 (credentials from `.env`)
 
-## GPU Usage
+## GPU usage
 
 GPU support is provided via a separate compose override file.
 Start with GPU:
@@ -137,7 +139,7 @@ import torch
 print(torch.cuda.is_available())
 ```
 
-## Project Structure
+## Project structure
 
 ```text
 .
@@ -159,7 +161,7 @@ print(torch.cuda.is_available())
     └── configs/               # Hyperparams, experiment configs
 ```
 
-## Security Notes
+## Security notes
 
 Default configuration uses token-based authentication for Jupyter.
 For production use:
@@ -183,7 +185,7 @@ Rebuild the container after changes:
 make build
 ```
 
-## Pre-commit Hooks
+## Pre-commit hooks
 
 Install pre-commit hooks to strip notebook outputs and lint Python code:
 
@@ -236,7 +238,7 @@ ports:
   - 8889:8888
 ```
 
-## Makefile Targets
+## Makefile targets
 
 ```bash
 make help

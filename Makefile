@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Unlicense
 .PHONY: up up-gpu down build logs clean ps
 
 up: ## Start all services

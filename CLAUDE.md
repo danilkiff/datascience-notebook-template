@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: Unlicense -->
+
 # CLAUDE.md
 
 ## Project overview
@@ -17,16 +19,17 @@ postgres ─healthy────────────────────�
                                                        mlflow ─healthy─▶ jupyter
 ```
 
-Two networks: `backend` (postgres, minio, mlflow) and `frontend` (jupyter, mlflow).
+Two networks: `backend` (postgres, minio, mlflow) and
+`frontend` (jupyter, mlflow).
 GPU support is a separate overlay: `docker-compose.gpu.yaml`.
 
 ## Key files
 
 - `docker-compose.yaml` — service orchestration, single source of truth
-- `docker-compose.gpu.yaml` — NVIDIA GPU overlay (shm\_size: 8g + devices)
-- `Dockerfile.jupyter` — base: scipy-notebook, adds fastai + mlflow + boto3
-- `Dockerfile.mlflow` — base: python:3.12-slim, adds mlflow + psycopg2 + boto3
-- `requirements/jupyter.in` and `requirements/mlflow.in` — pinned Python deps
+- `docker-compose.gpu.yaml` — NVIDIA GPU overlay (shm\_size + devices)
+- `Dockerfile.jupyter` — base: scipy-notebook, adds fastai + mlflow
+- `Dockerfile.mlflow` — base: python:3.12-slim, adds mlflow + psycopg2
+- `requirements/jupyter.in` and `requirements/mlflow.in` — pinned deps
 - `.env.example` — all configurable variables with defaults
 - `Makefile` — common commands (`make help` to list)
 
@@ -45,26 +48,59 @@ make build     # rebuild images without cache
 
 - All Docker images and pip packages must be version-pinned
 - Environment variables go through `.env`, never hardcoded in compose
-- `env_file:` is not used — variables are passed explicitly via `environment:` map
+- `env_file:` is not used — explicit `environment:` map only
 - Internal services (postgres, minio API) must not expose ports to host
 - Only Jupyter (8888), MLflow UI, MinIO Console are exposed
 - Commit messages: imperative mood, short first line (see git log)
+- Source files carry `SPDX-License-Identifier: Unlicense`
+  (Dockerfiles, compose, Makefile, CI workflow, markdown docs —
+  not dotfiles, .env, or requirements)
+- Markdown headings use sentence case (capitalize first word only)
 
-## Linting
+## CI
 
-CI runs: hadolint (Dockerfiles), markdownlint (\*.md), gitleaks (secrets),
-actionlint (workflows), compose validation, smoke-test (full stack up).
+Path-filtered jobs via `dorny/paths-filter` — each job runs only
+when relevant files change:
+
+| Job          | Triggers on                                          |
+| ------------ | ---------------------------------------------------- |
+| hadolint     | `Dockerfile.*`, `requirements/**`                    |
+| compose-lint | `docker-compose*.yaml`, Dockerfiles, `.env.example`  |
+| markdownlint | `**/*.md`, `.markdownlint.yaml`                      |
+| actionlint   | `.github/workflows/**`                               |
+| smoke-test   | same as compose-lint                                 |
+| gitleaks     | always (all files)                                   |
+
 Local: pre-commit hooks — nbstripout + ruff.
 
 ## Adding Python dependencies
 
-1. Add pinned package to `requirements/jupyter.in` or `requirements/mlflow.in`
+1. Add pinned package to `requirements/jupyter.in` or
+   `requirements/mlflow.in`
 2. Run `make build`
+
+## Adding a new service
+
+1. Add service definition to `docker-compose.yaml`
+2. Assign to `backend` and/or `frontend` network
+3. Add healthcheck so downstream services can `depends_on`
+4. Pin image version, never use `latest`
+5. If the service needs secrets, pass via `environment:` map
+6. Update `.env.example` with new variables and defaults
+
+## Modifying CI
+
+1. Edit `.github/workflows/ci.yml`
+2. If adding a new job, add a path filter in the `changes` job
+3. Set `needs: changes` and appropriate `if:` condition
+4. Run `actionlint` locally before pushing
 
 ## Do not
 
 - Put secrets in tracked files (`.env` is gitignored)
 - Add `env_file:` back to docker-compose services
 - Expose postgres or minio API ports to host
-- Hardcode `shm_size` — use `SHM_SIZE` env var (default 2g, GPU override sets 8g)
+- Hardcode `shm_size` — use `SHM_SIZE` env var (default 2g)
 - Commit notebook outputs — nbstripout pre-commit hook handles this
+- Use Title Case in markdown headings — sentence case only
+- Use `fetch-depth: 0` unless the job needs full git history

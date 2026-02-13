@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Unlicense
 name: CI
 
 on:
@@ -7,19 +8,54 @@ on:
   pull_request:
 
 jobs:
+  changes:
+    runs-on: ubuntu-22.04
+    permissions:
+      pull-requests: read
+    outputs:
+      docker: ${{ steps.filter.outputs.docker }}
+      compose: ${{ steps.filter.outputs.compose }}
+      markdown: ${{ steps.filter.outputs.markdown }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            docker:
+              - 'Dockerfile.*'
+              - 'requirements/**'
+            compose:
+              - 'docker-compose*.yaml'
+              - 'Dockerfile.*'
+              - 'requirements/**'
+              - '.env.example'
+            markdown:
+              - '**/*.md'
+              - '.markdownlint.yaml'
+            workflows:
+              - '.github/workflows/**'
+
   compose-lint:
+    needs: changes
+    if: needs.changes.outputs.compose == 'true'
     runs-on: ubuntu-22.04
     steps:
 
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Validate docker-compose.yaml
         run: cp .env.example .env && docker compose config
 
   hadolint:
+    needs: changes
+    if: needs.changes.outputs.docker == 'true'
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
@@ -31,8 +67,6 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Hadolint ${{ matrix.dockerfile }}
         uses: hadolint/hadolint-action@v3.1.0
@@ -42,27 +76,26 @@ jobs:
   gitleaks:
     runs-on: ubuntu-22.04
     steps:
-    
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Gitleaks check
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
   actionlint:
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true'
     runs-on: ubuntu-22.04
     steps:
-      
+
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          
+
       - name: Install actionlint
         run: bash <(curl -s https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
 
@@ -70,21 +103,23 @@ jobs:
         run: ./actionlint
 
   markdownlint:
+    needs: changes
+    if: needs.changes.outputs.markdown == 'true'
     runs-on: ubuntu-22.04
     steps:
-      
+
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Markdown lint (install)
         run: npm i -g markdownlint-cli@0.42.0
-      
+
       - name: Markdown lint (execute)
         run: markdownlint "**/*.md"
 
   smoke-test:
+    needs: changes
+    if: needs.changes.outputs.compose == 'true'
     runs-on: ubuntu-22.04
     steps:
 

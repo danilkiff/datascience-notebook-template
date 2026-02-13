@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Unlicense
 FROM quay.io/jupyter/scipy-notebook:2025-07-14
 USER ${NB_UID}
 COPY requirements/jupyter.in /tmp/requirements.in
