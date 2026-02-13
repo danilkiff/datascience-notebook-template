@@ -10,11 +10,11 @@ User code lives in `workspace/` (gitignored contents, tracked structure).
 
 Five Docker Compose services with health-checked startup order:
 
-```
-s3 (MinIO) ──healthy──▶ init_s3 (bucket setup) ──completed──┐
-postgres ──healthy──────────────────────────────────────────┤
-                                                            ▼
-                                                          mlflow ──healthy──▶ jupyter
+```text
+s3 (MinIO) ─healthy─▶ init_s3 (bucket setup) ─completed─┐
+postgres ─healthy────────────────────────────────────────┤
+                                                         ▼
+                                                       mlflow ─healthy─▶ jupyter
 ```
 
 Two networks: `backend` (postgres, minio, mlflow) and `frontend` (jupyter, mlflow).
@@ -23,16 +23,16 @@ GPU support is a separate overlay: `docker-compose.gpu.yaml`.
 ## Key files
 
 - `docker-compose.yaml` — service orchestration, single source of truth
-- `docker-compose.gpu.yaml` — NVIDIA GPU overlay (shm_size: 8g + devices)
-- `Dockerfile.jupyter` — base: `quay.io/jupyter/scipy-notebook`, adds fastai + mlflow + boto3
-- `Dockerfile.mlflow` — base: `python:3.12-slim`, adds mlflow + psycopg2 + boto3
+- `docker-compose.gpu.yaml` — NVIDIA GPU overlay (shm\_size: 8g + devices)
+- `Dockerfile.jupyter` — base: scipy-notebook, adds fastai + mlflow + boto3
+- `Dockerfile.mlflow` — base: python:3.12-slim, adds mlflow + psycopg2 + boto3
 - `requirements/jupyter.in` and `requirements/mlflow.in` — pinned Python deps
 - `.env.example` — all configurable variables with defaults
 - `Makefile` — common commands (`make help` to list)
 
 ## Common commands
 
-```
+```bash
 make up        # start stack (CPU)
 make up-gpu    # start stack with NVIDIA GPU
 make down      # stop
@@ -47,12 +47,13 @@ make build     # rebuild images without cache
 - Environment variables go through `.env`, never hardcoded in compose
 - `env_file:` is not used — variables are passed explicitly via `environment:` map
 - Internal services (postgres, minio API) must not expose ports to host
-- Only Jupyter (8888), MLflow UI (MLFLOW_PORT), MinIO Console (MINIO_CONSOLE_PORT) are exposed
+- Only Jupyter (8888), MLflow UI, MinIO Console are exposed
 - Commit messages: imperative mood, short first line (see git log)
 
 ## Linting
 
-CI runs: hadolint (Dockerfiles), markdownlint (*.md), gitleaks (secrets), actionlint (workflows), compose validation, smoke-test (full stack up).
+CI runs: hadolint (Dockerfiles), markdownlint (\*.md), gitleaks (secrets),
+actionlint (workflows), compose validation, smoke-test (full stack up).
 Local: pre-commit hooks — nbstripout + ruff.
 
 ## Adding Python dependencies

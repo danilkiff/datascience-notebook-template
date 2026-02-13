@@ -63,8 +63,11 @@ jobs:
         with:
           fetch-depth: 0
           
+      - name: Install actionlint
+        run: bash <(curl -s https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+
       - name: Actionlint check
-        uses: raven-actions/actionlint@v1
+        run: ./actionlint
 
   markdownlint:
     runs-on: ubuntu-22.04
