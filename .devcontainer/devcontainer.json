@@ -1,0 +1,16 @@
+{
+  "name": "DS Notebook",
+  "dockerComposeFile": ["../docker-compose.yaml"],
+  "service": "jupyter",
+  "workspaceFolder": "/home/jupyternb",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "charliermarsh.ruff"
+      ]
+    }
+  },
+  "shutdownAction": "none"
+}

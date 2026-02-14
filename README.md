@@ -111,6 +111,22 @@ Or with GPU support:
 make up-gpu
 ```
 
+## Development workflow
+
+The `workspace/` directory is a bind mount — files are shared between
+the host and the Jupyter container. Use the host for git and the
+container for compute:
+
+* **Git on host** — run `git`, `pre-commit`, and `dvc` commands
+  directly on the host machine. No git setup is needed inside the
+  container.
+* **VS Code** — open this repository and select *Reopen in Container*
+  (requires the Dev Containers extension). VS Code attaches to the
+  running Jupyter service with Python, Jupyter, and Ruff extensions
+  pre-configured.
+* **JupyterLab** — open <http://localhost:8888> in your browser for
+  an interactive notebook experience.
+
 ## Access
 
 * JupyterLab    - <http://localhost:8888> (token from `JUPYTER_TOKEN` in `.env`)
