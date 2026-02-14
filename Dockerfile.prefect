@@ -8,5 +8,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements/prefect.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
+RUN useradd -r -s /bin/false appuser
+USER appuser
+
 EXPOSE 4200
 ENTRYPOINT ["prefect"]

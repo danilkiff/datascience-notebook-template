@@ -11,5 +11,8 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 COPY scripts/serve-model.sh /usr/local/bin/serve-model.sh
 RUN chmod +x /usr/local/bin/serve-model.sh
 
+RUN useradd -r -s /bin/false appuser
+USER appuser
+
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/serve-model.sh"]
