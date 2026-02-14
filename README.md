@@ -3,7 +3,7 @@
 # JupyterLab data science environment
 
 A GPU-ready environment for data science and deep learning experiments with
-JupyterLab, Fast.ai, and MLflow tracking server (with MinIO + PostgreSQL).
+JupyterLab, PyTorch, and MLflow tracking server (with MinIO + PostgreSQL).
 
 * **Jupyter** for interactive dev & training (GPU-ready).
 * **MLflow** as tracking/UI with artifact proxying.
@@ -15,11 +15,11 @@ JupyterLab, Fast.ai, and MLflow tracking server (with MinIO + PostgreSQL).
 
 ```mermaid
 sequenceDiagram
-  participant S3 as s3 [mlflow_s3]
-  participant Init as init_s3 [mlflow_init_s3]
-  participant PG as postgres [mlflow_postgres]
-  participant MF as mlflow [mlflow_server]
-  participant NB as jupyter [jupyter]
+  participant S3 as s3 (MinIO)
+  participant Init as init_s3
+  participant PG as postgres
+  participant MF as mlflow
+  participant NB as jupyter
 
   Note over S3,NB: docker compose up --detach --build
 
@@ -73,11 +73,11 @@ with mlflow.start_run(run_name="demo"):
 * JupyterLab with pre-installed data science libraries (pandas, numpy,
   matplotlib, scikit-learn)
 * MLflow tracking server with artifact proxying, MinIO (S3) and PostgreSQL
-* Fast.ai deep learning framework
+* PyTorch deep learning framework (Fast.ai available via template option)
 * NVIDIA GPU support (CUDA) via separate compose override
 * Pre-configured workspace with training template (Hydra + MLflow)
 * Configurable shared memory (default 2GB, 8GB with GPU overlay)
-* Configurable resource limits for all services
+* Configurable resource limits for core services
 * Token-based Jupyter authentication
 * Network isolation (frontend/backend)
 * Reproducible builds with locked dependencies (uv)
@@ -219,6 +219,7 @@ print(torch.cuda.is_available())
 ├── copier.yml                 # Copier template configuration
 ├── requirements/
 │   ├── jupyter.in / .txt      # Jupyter deps (source + locked)
+│   ├── jupyter.constraints    # Version constraints for Jupyter deps
 │   ├── mlflow.in / .txt       # MLflow deps (source + locked)
 │   ├── prefect.in / .txt      # Prefect deps (source + locked)
 │   └── serving.in / .txt      # Serving deps (source + locked)
@@ -229,10 +230,14 @@ print(torch.cuda.is_available())
 ├── monitoring/                # Prometheus + Grafana configs
 ├── .pre-commit-config.yaml    # Pre-commit hooks (nbstripout, ruff)
 └── workspace/                 # User working directory (mounted in Jupyter)
-    ├── data/                  # Raw, processed, external data
-    ├── notebooks/             # Exploration and training notebooks
+    ├── data/
+    │   ├── raw/               # Raw, unprocessed data
+    │   ├── processed/         # Cleaned / transformed data
+    │   └── external/          # Third-party data
+    ├── notebooks/
+    │   └── quickstart.ipynb   # MLflow tracking example
     ├── src/
-    │   ├── train.py           # Training template (Hydra + MLflow)
+    │   ├── train.py           # Training template (Hydra + PyTorch + MLflow)
     │   ├── config/train.yaml  # Hydra configuration
     │   ├── tests/             # Unit tests
     │   └── flows/             # Prefect flow definitions

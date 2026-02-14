@@ -55,7 +55,7 @@ template-test: ## Test copier template generation
 	rm -rf /tmp/copier-test
 
 clean: ## Stop services and remove volumes
-	docker compose down --volumes --remove-orphans
+	docker compose --profile '*' down --volumes --remove-orphans
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
