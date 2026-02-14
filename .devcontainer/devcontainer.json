@@ -9,7 +9,10 @@
         "ms-python.python",
         "ms-toolsai.jupyter",
         "charliermarsh.ruff"
-      ]
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/conda/bin/python"
+      }
     }
   },
   "shutdownAction": "none"
