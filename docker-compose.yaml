@@ -23,9 +23,6 @@ services:
       NB_GID: ${NB_GID}
       CHOWN_HOME: "yes"
       MLFLOW_TRACKING_URI: http://mlflow:5000
-      MLFLOW_S3_ENDPOINT_URL: http://s3:9000
-      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
-      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
     shm_size: ${SHM_SIZE:-2g}
     healthcheck:
       test: curl -f http://localhost:8888/api
@@ -38,7 +35,6 @@ services:
         condition: service_healthy
     networks:
       - frontend
-      - backend
 
   s3:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
@@ -120,9 +116,11 @@ services:
     command: >
       server
         --backend-store-uri postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-        --default-artifact-root s3://${MINIO_BUCKET}
+        --serve-artifacts
+        --artifacts-destination s3://${MINIO_BUCKET}
         --host 0.0.0.0
         --port 5000
+        --allowed-hosts mlflow,mlflow:5000,localhost,localhost:5000
     healthcheck:
       test: wget -qO- http://localhost:5000/ >/dev/null 2>&1 || exit 1
       interval: 5s

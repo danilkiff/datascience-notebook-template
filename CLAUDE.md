@@ -20,7 +20,9 @@ postgres ─healthy────────────────────�
 ```
 
 Two networks: `backend` (postgres, minio, mlflow) and
-`frontend` (jupyter, mlflow).
+`frontend` (jupyter, mlflow). Jupyter has no direct access to
+backend services — artifacts are proxied through MLflow
+(`--serve-artifacts`).
 GPU support is a separate overlay: `docker-compose.gpu.yaml`.
 
 ## Key files
