@@ -7,9 +7,16 @@ set -euo pipefail
 MLFLOW_TRACKING_URI="${MLFLOW_TRACKING_URI:?MLFLOW_TRACKING_URI must be set}"
 MODEL_URI="${SERVING_MODEL_URI:?SERVING_MODEL_URI must be set (e.g. models:/my-model/1)}"
 PORT="${SERVING_PORT_INTERNAL:-8080}"
+MAX_RETRIES=60
 
 echo "Waiting for MLflow tracking server at ${MLFLOW_TRACKING_URI} ..."
+retries=0
 until wget -qO- "${MLFLOW_TRACKING_URI}/" >/dev/null 2>&1; do
+    retries=$((retries + 1))
+    if [ "$retries" -ge "$MAX_RETRIES" ]; then
+        echo "ERROR: MLflow tracking server not reachable after $((MAX_RETRIES * 2))s"
+        exit 1
+    fi
     sleep 2
 done
 echo "MLflow tracking server is ready."
@@ -19,4 +26,4 @@ exec mlflow models serve \
     --model-uri "${MODEL_URI}" \
     --host 0.0.0.0 \
     --port "${PORT}" \
-    --no-conda
+    --env-manager=local
