@@ -24,9 +24,15 @@ MINIO_PASSWORD=$(generate_password)
 POSTGRES_PASSWORD=$(generate_password)
 
 sed \
-    -e "s/JUPYTER_TOKEN=changeme/JUPYTER_TOKEN=${JUPYTER_TOKEN}/" \
-    -e "s/MINIO_ROOT_PASSWORD=password/MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}/" \
-    -e "s/POSTGRES_PASSWORD=password/POSTGRES_PASSWORD=${POSTGRES_PASSWORD}/" \
+    -e "s/^JUPYTER_TOKEN=.*/JUPYTER_TOKEN=${JUPYTER_TOKEN}/" \
+    -e "s/^MINIO_ROOT_PASSWORD=.*/MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}/" \
+    -e "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=${POSTGRES_PASSWORD}/" \
     "$EXAMPLE_FILE" > "$ENV_FILE"
+
+# Verify no placeholder passwords remain
+if grep -qE '^(JUPYTER_TOKEN|MINIO_ROOT_PASSWORD|POSTGRES_PASSWORD)=(changeme|password)$' "$ENV_FILE"; then
+    echo "Error: placeholder passwords still present in $ENV_FILE"
+    exit 1
+fi
 
 echo "Created $ENV_FILE with generated passwords."
