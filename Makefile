@@ -29,10 +29,10 @@ ps: ## Show running services
 	docker compose ps
 
 lock: ## Regenerate pinned requirements/*.txt from *.in
-	uv pip compile requirements/jupyter.in -o requirements/jupyter.txt --python-version 3.12 -c requirements/jupyter.constraints
-	uv pip compile requirements/mlflow.in -o requirements/mlflow.txt --python-version 3.12
-	uv pip compile requirements/prefect.in -o requirements/prefect.txt --python-version 3.12
-	uv pip compile requirements/serving.in -o requirements/serving.txt --python-version 3.12
+	uv pip compile requirements/jupyter.in -o requirements/jupyter.txt --python-version 3.12 -c requirements/jupyter.constraints --no-header
+	uv pip compile requirements/mlflow.in -o requirements/mlflow.txt --python-version 3.12 --no-header
+	uv pip compile requirements/prefect.in -o requirements/prefect.txt --python-version 3.12 --no-header
+	uv pip compile requirements/serving.in -o requirements/serving.txt --python-version 3.12 --no-header
 
 init: ## Generate .env with random passwords
 	bash scripts/init-env.sh
