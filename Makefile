@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Unlicense
-.PHONY: up up-gpu down build logs clean ps lock init train test
+.PHONY: up up-gpu down build logs clean ps lock init train test dvc-push dvc-pull
 
 up: ## Start all services
 	docker compose up --detach --build
@@ -31,6 +31,12 @@ train: ## Run training script inside Jupyter container
 
 test: ## Run pytest inside Jupyter container
 	docker compose exec jupyter pytest src/tests/ -v
+
+dvc-push: ## Push DVC-tracked data to MinIO
+	docker compose exec jupyter dvc push
+
+dvc-pull: ## Pull DVC-tracked data from MinIO
+	docker compose exec jupyter dvc pull
 
 clean: ## Stop services and remove volumes
 	docker compose down --volumes --remove-orphans

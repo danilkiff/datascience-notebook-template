@@ -84,6 +84,15 @@ Local: pre-commit hooks — nbstripout + ruff.
 2. Run `make lock` to regenerate the `.txt` lock files
 3. Run `make build`
 
+## Data versioning with DVC
+
+DVC is pre-configured with MinIO as remote storage (`s3://dvc`).
+Inside the Jupyter container:
+
+1. `dvc add data/raw/my_dataset.csv`
+2. `git add data/raw/my_dataset.csv.dvc data/raw/.gitignore`
+3. `make dvc-push` (or `dvc push`)
+
 ## Adding a new service
 
 1. Add service definition to `docker-compose.yaml`

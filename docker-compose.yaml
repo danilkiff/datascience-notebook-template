@@ -23,6 +23,9 @@ services:
       NB_GID: ${NB_GID}
       CHOWN_HOME: "yes"
       MLFLOW_TRACKING_URI: http://mlflow:5000
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_ENDPOINT_URL: http://s3:9000
     shm_size: ${SHM_SIZE:-2g}
     deploy:
       resources:
@@ -67,6 +70,7 @@ services:
       start_period: 5s
     networks:
       - backend
+      - frontend
 
   init_s3:
     image: minio/mc:RELEASE.2025-08-13T08-35-41Z
@@ -78,7 +82,8 @@ services:
       /bin/sh -c "
       mc alias set minio http://s3:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
       mc mb -p minio/${MINIO_BUCKET} || true &&
-      mc version enable minio/${MINIO_BUCKET} || true
+      mc version enable minio/${MINIO_BUCKET} || true &&
+      mc mb -p minio/${DVC_BUCKET:-dvc} || true
       "
     restart: "no"
     networks:
