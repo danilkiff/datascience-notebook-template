@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Unlicense
+_min_copier_version: "9.0.0"
+
+_subdirectory: ""
+
+_skip_if_exists:
+  - .env
+
+project_name:
+  type: str
+  help: Project name (used in container labels and README)
+  default: my-ml-project
+  validator: "{% if not project_name %}Project name cannot be empty{% endif %}"
+
+author:
+  type: str
+  help: Author name
+  default: ""
+
+ml_framework:
+  type: str
+  help: Primary ML framework to include
+  choices:
+    fastai: fastai
+    pytorch: PyTorch (standalone)
+    none: None (scipy-notebook only)
+  default: fastai
+
+gpu_support:
+  type: bool
+  help: Include GPU support overlay?
+  default: true

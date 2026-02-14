@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Unlicense
-.PHONY: up up-gpu down build logs clean ps lock init train test dvc-push dvc-pull
+.PHONY: up up-gpu down build logs clean ps lock init train test dvc-push dvc-pull template-test
 
 up: ## Start all services
 	docker compose up --detach --build
@@ -37,6 +37,11 @@ dvc-push: ## Push DVC-tracked data to MinIO
 
 dvc-pull: ## Pull DVC-tracked data from MinIO
 	docker compose exec jupyter dvc pull
+
+template-test: ## Test copier template generation
+	rm -rf /tmp/copier-test && uvx copier copy . /tmp/copier-test --defaults
+	cd /tmp/copier-test && cp .env.example .env && docker compose config > /dev/null
+	rm -rf /tmp/copier-test
 
 clean: ## Stop services and remove volumes
 	docker compose down --volumes --remove-orphans
