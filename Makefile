@@ -16,8 +16,8 @@ up-orchestration: ## Start all services with Prefect
 up-serving: ## Start all services with model serving
 	docker compose --profile serving up --detach --build
 
-down: ## Stop all services
-	docker compose down
+down: ## Stop all services (including profile services)
+	docker compose --profile '*' down
 
 build: ## Rebuild images without cache
 	docker compose build --no-cache
