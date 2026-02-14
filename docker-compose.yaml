@@ -156,6 +156,49 @@ services:
       - frontend
       - backend
 
+  prometheus:
+    image: prom/prometheus:v3.5.1
+    container_name: prometheus
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    healthcheck:
+      test: wget -qO- http://localhost:9090/-/healthy >/dev/null 2>&1 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - backend
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    container_name: grafana
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    healthcheck:
+      test: wget -qO- http://localhost:3000/api/health >/dev/null 2>&1 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    networks:
+      - backend
+
 networks:
   frontend: {}
   backend: {}

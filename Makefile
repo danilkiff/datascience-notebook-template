@@ -1,11 +1,14 @@
 # SPDX-License-Identifier: Unlicense
-.PHONY: up up-gpu down build logs clean ps lock init train test dvc-push dvc-pull template-test
+.PHONY: up up-gpu up-monitoring down build logs clean ps lock init train test dvc-push dvc-pull template-test
 
 up: ## Start all services
 	docker compose up --detach --build
 
 up-gpu: ## Start all services with GPU support
 	docker compose -f docker-compose.yaml -f docker-compose.gpu.yaml up --detach --build
+
+up-monitoring: ## Start all services with monitoring
+	docker compose --profile monitoring up --detach --build
 
 down: ## Stop all services
 	docker compose down
