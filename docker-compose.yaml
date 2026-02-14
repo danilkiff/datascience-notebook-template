@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.jupyter
-    container_name: jupyter
+    container_name: "${COMPOSE_PROJECT_NAME:-my-ml-project}_jupyter"
     restart: unless-stopped
     command: >
       jupyter lab
@@ -46,7 +46,7 @@ services:
 
   s3:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
-    container_name: mlflow_s3
+    container_name: "${COMPOSE_PROJECT_NAME:-my-ml-project}_s3"
     restart: unless-stopped
     command: server /data --console-address ":9001"
     ports:
@@ -74,7 +74,7 @@ services:
 
   init_s3:
     image: minio/mc:RELEASE.2025-08-13T08-35-41Z
-    container_name: mlflow_init_s3
+    container_name: "${COMPOSE_PROJECT_NAME:-my-ml-project}_init_s3"
     depends_on:
       s3:
         condition: service_healthy
@@ -91,7 +91,7 @@ services:
 
   postgres:
     image: postgres:17.8
-    container_name: mlflow_postgres
+    container_name: "${COMPOSE_PROJECT_NAME:-my-ml-project}_postgres"
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -118,7 +118,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.mlflow
-    container_name: mlflow_server
+    container_name: "${COMPOSE_PROJECT_NAME:-my-ml-project}_mlflow"
     restart: unless-stopped
     environment:
       MLFLOW_S3_ENDPOINT_URL: http://s3:9000
@@ -159,7 +159,7 @@ services:
 
   prometheus:
     image: prom/prometheus:v3.5.1
-    container_name: prometheus
+    container_name: "${COMPOSE_PROJECT_NAME:-my-ml-project}_prometheus"
     restart: unless-stopped
     profiles:
       - monitoring
@@ -178,7 +178,7 @@ services:
 
   grafana:
     image: grafana/grafana:11.6.0
-    container_name: grafana
+    container_name: "${COMPOSE_PROJECT_NAME:-my-ml-project}_grafana"
     restart: unless-stopped
     profiles:
       - monitoring
@@ -204,7 +204,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prefect
-    container_name: prefect
+    container_name: "${COMPOSE_PROJECT_NAME:-my-ml-project}_prefect"
     restart: unless-stopped
     profiles:
       - orchestration
@@ -230,7 +230,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.serving
-    container_name: mlflow_serving
+    container_name: "${COMPOSE_PROJECT_NAME:-my-ml-project}_serving"
     restart: unless-stopped
     profiles:
       - serving

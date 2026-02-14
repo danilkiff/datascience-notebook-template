@@ -50,7 +50,7 @@ dvc-pull: ## Pull DVC-tracked data from MinIO
 	docker compose exec jupyter dvc pull
 
 template-test: ## Test copier template generation
-	rm -rf /tmp/copier-test && uvx copier copy . /tmp/copier-test --defaults
+	rm -rf /tmp/copier-test && uvx copier copy . /tmp/copier-test --defaults --trust
 	cd /tmp/copier-test && cp .env.example .env && docker compose config > /dev/null
 	rm -rf /tmp/copier-test
 
