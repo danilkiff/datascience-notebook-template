@@ -6,6 +6,9 @@ workspace/**
 !workspace/**/
 !workspace/**/.gitkeep
 
+# workspace: track starter notebook
+!workspace/notebooks/quickstart.ipynb
+
 # workspace: track template files
 !workspace/src/train.py
 !workspace/src/conftest.py
