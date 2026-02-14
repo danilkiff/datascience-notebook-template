@@ -56,7 +56,7 @@ make up-gpu         # start stack with NVIDIA GPU
 make up-monitoring  # start with Prometheus + Grafana
 make up-orchestration # start with Prefect
 make up-serving     # start with model serving
-make down           # stop
+make down           # stop (all profiles included)
 make clean          # stop + remove volumes
 make logs           # tail all service logs
 make build          # rebuild images without cache
