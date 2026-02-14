@@ -5,3 +5,10 @@
 workspace/**
 !workspace/**/
 !workspace/**/.gitkeep
+
+# workspace: track template files
+!workspace/src/train.py
+!workspace/src/conftest.py
+!workspace/src/config/train.yaml
+!workspace/src/tests/__init__.py
+!workspace/src/tests/test_train.py

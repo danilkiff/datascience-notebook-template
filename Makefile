@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Unlicense
-.PHONY: up up-gpu down build logs clean ps lock init
+.PHONY: up up-gpu down build logs clean ps lock init train test
 
 up: ## Start all services
 	docker compose up --detach --build
@@ -25,6 +25,12 @@ lock: ## Regenerate pinned requirements/*.txt from *.in
 
 init: ## Generate .env with random passwords
 	bash scripts/init-env.sh
+
+train: ## Run training script inside Jupyter container
+	docker compose exec jupyter python src/train.py
+
+test: ## Run pytest inside Jupyter container
+	docker compose exec jupyter pytest src/tests/ -v
 
 clean: ## Stop services and remove volumes
 	docker compose down --volumes --remove-orphans
