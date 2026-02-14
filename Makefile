@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Unlicense
-.PHONY: up up-gpu up-monitoring up-orchestration down build logs clean ps lock init train test dvc-push dvc-pull template-test
+.PHONY: up up-gpu up-monitoring up-orchestration up-serving down build logs clean ps lock init train test dvc-push dvc-pull template-test
 
 up: ## Start all services
 	docker compose up --detach --build
@@ -12,6 +12,9 @@ up-monitoring: ## Start all services with monitoring
 
 up-orchestration: ## Start all services with Prefect
 	docker compose --profile orchestration up --detach --build
+
+up-serving: ## Start all services with model serving
+	docker compose --profile serving up --detach --build
 
 down: ## Stop all services
 	docker compose down
@@ -29,6 +32,7 @@ lock: ## Regenerate pinned requirements/*.txt from *.in
 	uv pip compile requirements/jupyter.in -o requirements/jupyter.txt --python-version 3.12 -c requirements/jupyter.constraints
 	uv pip compile requirements/mlflow.in -o requirements/mlflow.txt --python-version 3.12
 	uv pip compile requirements/prefect.in -o requirements/prefect.txt --python-version 3.12
+	uv pip compile requirements/serving.in -o requirements/serving.txt --python-version 3.12
 
 init: ## Generate .env with random passwords
 	bash scripts/init-env.sh

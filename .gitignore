@@ -12,6 +12,7 @@ workspace/**
 !workspace/src/config/train.yaml
 !workspace/src/tests/__init__.py
 !workspace/src/tests/test_train.py
+!workspace/src/tests/test_serving.py
 
 # workspace: track DVC config
 !workspace/.dvc/config
