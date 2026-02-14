@@ -5,8 +5,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc libpq-dev wget ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
-COPY requirements/mlflow.in /tmp/requirements.in
-RUN pip install --no-cache-dir -r /tmp/requirements.in
+COPY requirements/mlflow.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 EXPOSE 5000
 ENTRYPOINT ["mlflow"]
