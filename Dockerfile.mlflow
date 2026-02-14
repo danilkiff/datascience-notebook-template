@@ -6,9 +6,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements/mlflow.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
-
-RUN useradd -r -s /bin/false appuser
+RUN pip install --no-cache-dir -r /tmp/requirements.txt \
+ && useradd -r -s /bin/false appuser
 USER appuser
 
 EXPOSE 5000
