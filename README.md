@@ -236,8 +236,7 @@ print(torch.cuda.is_available())
     │   ├── config/train.yaml  # Hydra configuration
     │   ├── tests/             # Unit tests
     │   └── flows/             # Prefect flow definitions
-    ├── models/                # Serialized models
-    └── configs/               # Hyperparams, experiment configs
+    └── models/                # Serialized models
 ```
 
 ## Security notes
