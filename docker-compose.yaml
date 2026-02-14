@@ -99,6 +99,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-postgres.sql:/docker-entrypoint-initdb.d/init-extra-dbs.sql:ro
     deploy:
       resources:
         limits:
@@ -197,6 +198,32 @@ services:
       prometheus:
         condition: service_healthy
     networks:
+      - backend
+
+  prefect:
+    build:
+      context: .
+      dockerfile: Dockerfile.prefect
+    container_name: prefect
+    restart: unless-stopped
+    profiles:
+      - orchestration
+    command: server start --host 0.0.0.0
+    ports:
+      - "${PREFECT_PORT:-4200}:4200"
+    environment:
+      PREFECT_API_DATABASE_CONNECTION_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/prefect
+    healthcheck:
+      test: wget -qO- http://localhost:4200/api/health >/dev/null 2>&1 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - frontend
       - backend
 
 networks:

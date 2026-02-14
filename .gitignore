@@ -16,3 +16,6 @@ workspace/**
 # workspace: track DVC config
 !workspace/.dvc/config
 !workspace/.dvcignore
+
+# workspace: track Prefect flows
+!workspace/src/flows/train_flow.py
