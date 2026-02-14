@@ -53,6 +53,14 @@ jobs:
       - name: Validate docker-compose.yaml
         run: cp .env.example .env && docker compose config
 
+      - name: Validate optional profiles
+        run: >
+          docker compose
+          --profile monitoring
+          --profile orchestration
+          --profile serving
+          config
+
   hadolint:
     needs: changes
     if: needs.changes.outputs.docker == 'true'
@@ -63,6 +71,8 @@ jobs:
         dockerfile:
           - Dockerfile.jupyter
           - Dockerfile.mlflow
+          - Dockerfile.prefect
+          - Dockerfile.serving
     steps:
 
       - name: Checkout

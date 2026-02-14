@@ -6,7 +6,7 @@ A GPU-ready environment for data science and deep learning experiments with
 JupyterLab, Fast.ai, and MLflow tracking server (with MinIO + PostgreSQL).
 
 * **Jupyter** for interactive dev & training (GPU-ready).
-* **MLflow** as tracking/UI.
+* **MLflow** as tracking/UI with artifact proxying.
 * **PostgreSQL** as MLflow backend store (experiments, params, metrics).
 * **MinIO (S3)** as artifact store (models, plots, notebooks).
 * **init\_s3** as one-time bucket initializer.
@@ -32,8 +32,8 @@ sequenceDiagram
   MF->>PG: connect (backend URI)
   MF->>S3: ping (artifact root)
   MF-->>NB: service_healthy
-  NB->>MF: log params/metrics/artifacts
-  NB->>S3: direct S3 operations if needed
+  NB->>MF: log params/metrics/artifacts (proxied)
+  NB->>S3: DVC data operations (via frontend network)
 ```
 
 ## Data flow
@@ -41,8 +41,9 @@ sequenceDiagram
 1. Notebook runs in **Jupyter**.
 2. Code calls MLflow client (`mlflow.log_*` / `autolog()`).
 3. **MLflow** writes metadata to **Postgres**.
-4. **MLflow** uploads artifacts to **MinIO** under `s3://$MINIO_BUCKET/...`.
+4. **MLflow** proxies artifact uploads to **MinIO** (`--serve-artifacts`).
 5. You inspect runs in MLflow UI; raw artifacts visible via MinIO Console.
+6. **DVC** tracks large datasets directly through MinIO via the frontend network.
 
 ## Volumes
 
@@ -71,15 +72,18 @@ with mlflow.start_run(run_name="demo"):
 
 * JupyterLab with pre-installed data science libraries (pandas, numpy,
   matplotlib, scikit-learn)
-* MLflow tracking server with MinIO (S3) and PostgreSQL backend
+* MLflow tracking server with artifact proxying, MinIO (S3) and PostgreSQL
 * Fast.ai deep learning framework
 * NVIDIA GPU support (CUDA) via separate compose override
-* Pre-configured workspace directory with canonical DS layout
-* 2GB shared memory allocation
+* Pre-configured workspace with training template (Hydra + MLflow)
+* Configurable shared memory (default 2GB, 8GB with GPU overlay)
+* Configurable resource limits for all services
 * Token-based Jupyter authentication
 * Network isolation (frontend/backend)
+* Reproducible builds with locked dependencies (uv)
+* Data versioning with DVC (MinIO as remote)
 * Pre-commit hooks (nbstripout, ruff)
-* Makefile for common operations
+* Copier template for project scaffolding
 
 ## Prerequisites
 
@@ -89,9 +93,13 @@ with mlflow.start_run(run_name="demo"):
 
 ## Quick start
 
-* Clone this repository
-* Copy `.env.example` to `.env` and adjust for your needs.
-  Then start the container:
+Clone this repository, then generate a `.env` with random passwords:
+
+```bash
+make init
+```
+
+Start the stack:
 
 ```bash
 make up
@@ -103,17 +111,58 @@ Or with GPU support:
 make up-gpu
 ```
 
-Or directly via Docker Compose:
-
-```bash
-docker compose up --build --detach
-```
-
 ## Access
 
-* JupyterLab    - http://localhost:8888 (token from `JUPYTER_TOKEN` in `.env`)
-* MLflow UI     - http://localhost:5050
-* MinIO console - http://localhost:9001 (credentials from `.env`)
+* JupyterLab    - <http://localhost:8888> (token from `JUPYTER_TOKEN` in `.env`)
+* MLflow UI     - <http://localhost:5050>
+* MinIO console - <http://localhost:9001> (credentials from `.env`)
+
+## Training and testing
+
+A template training script with Hydra configuration and MLflow tracking
+is provided at `workspace/src/train.py`:
+
+```bash
+make train                              # run with defaults
+docker compose exec jupyter python src/train.py model.lr=0.01  # override params
+make test                               # run pytest
+```
+
+## Data versioning (DVC)
+
+DVC is pre-configured with MinIO as remote storage (`s3://dvc`).
+Inside the Jupyter container:
+
+```bash
+dvc add data/raw/my_dataset.csv
+git add data/raw/my_dataset.csv.dvc data/raw/.gitignore
+make dvc-push   # upload to MinIO
+make dvc-pull   # download from MinIO
+```
+
+## Optional profiles
+
+Activate optional services using compose profiles:
+
+| Profile | Command | Services |
+| --- | --- | --- |
+| `monitoring` | `make up-monitoring` | Prometheus (9090), Grafana (3000) |
+| `orchestration` | `make up-orchestration` | Prefect server (4200) |
+| `serving` | `make up-serving` | MLflow model serving (8080) |
+
+Configure ports and credentials in `.env` (see `.env.example` for defaults).
+
+## Copier template
+
+This repository is a [Copier](https://copier.readthedocs.io/) template.
+Generate a new project:
+
+```bash
+copier copy gh:your-org/this-repo /path/to/new-project
+```
+
+Parameters: `project_name`, `author`, `ml_framework` (fastai/pytorch/none),
+`gpu_support` (bool).
 
 ## GPU usage
 
@@ -146,17 +195,31 @@ print(torch.cuda.is_available())
 ├── docker-compose.yaml        # Orchestration of all services
 ├── docker-compose.gpu.yaml    # GPU override (nvidia devices)
 ├── .env                       # Environment variables (edit here)
-├── Dockerfile.jupyter         # JupyterLab + fastai + mlflow client
-├── Dockerfile.mlflow          # MLflow tracking server
+├── Dockerfile.jupyter          # JupyterLab + fastai + mlflow client
+├── Dockerfile.mlflow           # MLflow tracking server
+├── Dockerfile.prefect          # Prefect orchestrator (optional)
+├── Dockerfile.serving          # MLflow model serving (optional)
 ├── Makefile                   # Common commands (make help)
+├── copier.yml                 # Copier template configuration
 ├── requirements/
-│   ├── jupyter.in             # Jupyter Python dependencies
-│   └── mlflow.in              # MLflow Python dependencies
+│   ├── jupyter.in / .txt      # Jupyter deps (source + locked)
+│   ├── mlflow.in / .txt       # MLflow deps (source + locked)
+│   ├── prefect.in / .txt      # Prefect deps (source + locked)
+│   └── serving.in / .txt      # Serving deps (source + locked)
+├── scripts/
+│   ├── init-env.sh            # Generate .env with random passwords
+│   ├── init-postgres.sql      # Create extra databases (prefect)
+│   └── serve-model.sh         # Model serving entrypoint
+├── monitoring/                # Prometheus + Grafana configs
 ├── .pre-commit-config.yaml    # Pre-commit hooks (nbstripout, ruff)
 └── workspace/                 # User working directory (mounted in Jupyter)
     ├── data/                  # Raw, processed, external data
     ├── notebooks/             # Exploration and training notebooks
-    ├── src/                   # Reusable Python modules
+    ├── src/
+    │   ├── train.py           # Training template (Hydra + MLflow)
+    │   ├── config/train.yaml  # Hydra configuration
+    │   ├── tests/             # Unit tests
+    │   └── flows/             # Prefect flow definitions
     ├── models/                # Serialized models
     └── configs/               # Hyperparams, experiment configs
 ```
@@ -167,6 +230,7 @@ Default configuration uses token-based authentication for Jupyter.
 For production use:
 
 * Change `JUPYTER_TOKEN` from the default value
+* Run `make init` to generate random passwords (instead of defaults)
 * Use HTTPS encryption
 * Enable MLflow authentication
 * Restrict network access
@@ -179,9 +243,10 @@ Add packages to `requirements/jupyter.in`:
 your-package-name==1.0.0
 ```
 
-Rebuild the container after changes:
+Regenerate locked dependencies and rebuild:
 
 ```bash
+make lock
 make build
 ```
 
@@ -231,29 +296,33 @@ docker run --rm \
 
 ### Port conflict
 
-Change port mapping in docker-compose.yaml:
+Change port mappings in `.env`:
 
-```yaml
-ports:
-  - 8889:8888
+```bash
+MLFLOW_PORT=5051
+MINIO_CONSOLE_PORT=9002
 ```
 
 ## Makefile targets
 
-```bash
-make help
-```
+Run `make help` for the full list. Key targets:
 
-| Target   | Description                          |
-|----------|--------------------------------------|
-| `up`     | Start all services                   |
-| `up-gpu` | Start all services with GPU support  |
-| `down`   | Stop all services                    |
-| `build`  | Rebuild images without cache         |
-| `logs`   | Tail logs from all services          |
-| `ps`     | Show running services                |
-| `clean`  | Stop services and remove volumes     |
-| `help`   | Show available targets               |
+| Target             | Description                          |
+| ------------------ | ------------------------------------ |
+| `up`               | Start all services                   |
+| `up-gpu`           | Start all services with GPU support  |
+| `up-monitoring`    | Start with Prometheus + Grafana      |
+| `up-orchestration` | Start with Prefect                   |
+| `up-serving`       | Start with model serving             |
+| `down`             | Stop all services                    |
+| `build`            | Rebuild images without cache         |
+| `lock`             | Regenerate locked dependencies       |
+| `init`             | Generate .env with random passwords  |
+| `train`            | Run training script in Jupyter       |
+| `test`             | Run pytest in Jupyter                |
+| `dvc-push`         | Push DVC data to MinIO               |
+| `dvc-pull`         | Pull DVC data from MinIO             |
+| `clean`            | Stop services and remove volumes     |
 
 ## License
 
