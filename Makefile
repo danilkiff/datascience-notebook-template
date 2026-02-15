@@ -37,16 +37,16 @@ lock: ## Regenerate pinned requirements/*.txt from *.in
 init: ## Generate .env with random passwords
 	bash scripts/init-env.sh
 
-train: ## Run training script inside Jupyter container
+train: up ## Run training script inside Jupyter container
 	docker compose exec jupyter python src/train.py
 
-test: ## Run pytest inside Jupyter container
+test: up ## Run pytest inside Jupyter container
 	docker compose exec jupyter pytest src/tests/ -v
 
-dvc-push: ## Push DVC-tracked data to MinIO
+dvc-push: up ## Push DVC-tracked data to MinIO
 	docker compose exec jupyter dvc push
 
-dvc-pull: ## Pull DVC-tracked data from MinIO
+dvc-pull: up ## Pull DVC-tracked data from MinIO
 	docker compose exec jupyter dvc pull
 
 template-test: ## Test copier template generation
