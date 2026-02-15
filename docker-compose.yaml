@@ -146,7 +146,7 @@ services:
         --artifacts-destination s3://${MINIO_BUCKET}
         --host 0.0.0.0
         --port 5000
-        --allowed-hosts mlflow,mlflow:5000,localhost,localhost:5000,localhost:${MLFLOW_PORT:-5050}
+        --allowed-hosts mlflow:5000,localhost:5000,localhost:${MLFLOW_PORT:-5050}
     healthcheck:
       test: wget -qO- http://localhost:5000/ >/dev/null 2>&1 || exit 1
       interval: 5s
