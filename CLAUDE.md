@@ -70,6 +70,12 @@ make dvc-push       # push DVC data to MinIO
 make dvc-pull       # pull DVC data from MinIO
 ```
 
+## Change process
+
+- Every change must start with a GitHub issue in **problem — solution**
+  format (high-level, not implementation details)
+- Do not begin work without a corresponding issue
+
 ## Conventions
 
 - All Docker images and pip packages must be version-pinned
