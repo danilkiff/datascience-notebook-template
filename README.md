@@ -314,6 +314,39 @@ docker run --rm \
   nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi
 ```
 
+### CDI spec out of date after driver upgrade (Ubuntu)
+
+When `apt upgrade` updates the NVIDIA driver, the CDI device spec
+(`/etc/cdi/nvidia.yaml`) still references old library paths, causing
+container startup failures like:
+
+```text
+failed to fulfil mount request:
+  open /usr/lib/x86_64-linux-gnu/libEGL_nvidia.so.<old>:
+  no such file or directory
+```
+
+Fix manually:
+
+```bash
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+sudo systemctl restart docker
+```
+
+To regenerate the spec automatically after every `apt` run, create a
+hook:
+
+```bash
+sudo tee /etc/apt/apt.conf.d/99-nvidia-cdi-update << 'EOF'
+DPkg::Post-Invoke {
+  "if dpkg -l | grep -q libnvidia-compute; then \
+     nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml 2>/dev/null \
+     && systemctl restart docker 2>/dev/null; \
+   fi";
+};
+EOF
+```
+
 ### Port conflict
 
 Change port mappings in `.env`:
